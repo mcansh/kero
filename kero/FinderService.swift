@@ -23,20 +23,27 @@ final class KeroApplicationDelegate: NSObject, NSApplicationDelegate {
         // after its command graph is built. Route this shortcut before it reaches
         // the focused terminal/editor, while preserving NSWindow's validation.
         fullScreenKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            guard event.modifierFlags.intersection([.command, .control, .option, .shift]) == [.command, .control],
-                  event.charactersIgnoringModifiers?.lowercased() == "f"
-            else { return event }
-            self?.installFullScreenMenuItem(nil)
-            let action = #selector(NSWindow.toggleFullScreen(_:))
-            guard let menu = NSApp.mainMenu?.item(withTitle: String(localized: "View"))?.submenu,
-                  let item = menu.items.first(where: { $0.action == action }),
-                  let window = NSApp.target(forAction: action) as? NSWindow,
-                  window.validateMenuItem(item)
-            else { return event }
-            if !event.isARepeat {
-                NSApp.sendAction(action, to: window, from: item)
+            // Local monitors run synchronously on AppKit's main event thread.
+            // Carry NSEvent across the isolation bridge without sending it.
+            let input = MainThreadEvent(event)
+            let output: MainThreadEvent = assumeMainActor {
+                guard let event = input.value else { return input }
+                guard event.modifierFlags.intersection([.command, .control, .option, .shift]) == [.command, .control],
+                      event.charactersIgnoringModifiers?.lowercased() == "f"
+                else { return input }
+                self?.installFullScreenMenuItem(nil)
+                let action = #selector(NSWindow.toggleFullScreen(_:))
+                guard let menu = NSApp.mainMenu?.item(withTitle: String(localized: "View"))?.submenu,
+                      let item = menu.items.first(where: { $0.action == action }),
+                      let window = NSApp.target(forAction: action) as? NSWindow,
+                      window.validateMenuItem(item)
+                else { return input }
+                if !event.isARepeat {
+                    NSApp.sendAction(action, to: window, from: item)
+                }
+                return MainThreadEvent(nil)
             }
-            return nil
+            return output.value
         }
         NotificationCenter.default.addObserver(
             self,

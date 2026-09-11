@@ -3,7 +3,7 @@
 //  kero
 //
 
-import Foundation
+import AppKit
 
 /// Runs `body` as main-actor work without asking the concurrency runtime to
 /// confirm the isolation first.
@@ -33,5 +33,15 @@ nonisolated func assumeMainActor<T>(_ body: @MainActor () -> T) -> T {
     assert(Thread.isMainThread, "assumeMainActor off the main thread")
     return withoutActuallyEscaping(body) { body in
         unsafeBitCast(body, to: (() -> T).self)()
+    }
+}
+
+/// `NSEvent` is explicitly non-Sendable, but a local event monitor and its
+/// result are synchronous on AppKit's main event thread.
+struct MainThreadEvent: @unchecked Sendable {
+    let value: NSEvent?
+
+    init(_ value: NSEvent?) {
+        self.value = value
     }
 }

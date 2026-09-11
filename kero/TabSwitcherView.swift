@@ -304,16 +304,6 @@ final class TabSwitcherMonitorView: NSView {
     }
 }
 
-/// `NSEvent` is explicitly non-Sendable, but a local event monitor and its
-/// result are synchronous on AppKit's main event thread.
-private struct MainThreadEvent: @unchecked Sendable {
-    let value: NSEvent?
-
-    init(_ value: NSEvent?) {
-        self.value = value
-    }
-}
-
 private enum TabSwitcherLayout {
     static let cardWidth: CGFloat = 194
     static let cardHeight: CGFloat = 169
