@@ -2506,6 +2506,22 @@
     "Enter a name for the new branch." : {
 
     },
+    "Enter Full Screen" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "フルスクリーンにする"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "进入全屏幕"
+          }
+        }
+      }
+    },
     "Equalize Panes" : {
       "localizations" : {
         "ja" : {
@@ -7467,6 +7483,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "用所选内容查找"
+          }
+        }
+      }
+    },
+    "View" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "表示"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示"
           }
         }
       }

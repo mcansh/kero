@@ -16,6 +16,8 @@ the original feature bullet instead of adding separate entries for them.
 
 ## [unreleased]
 
+- Add the standard Enter Full Screen and Exit Full Screen commands to the View menu, with Control–Command–F to toggle
+
 ## [0.1.48]
 
 - Fix a crash when git status includes a file removed from the index but still present on disk

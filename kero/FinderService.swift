@@ -18,6 +18,32 @@ final class KeroApplicationDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.servicesProvider = self
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(installFullScreenMenuItem(_:)),
+            name: NSMenu.didBeginTrackingNotification,
+            object: nil
+        )
+        // SwiftUI finishes assembling the main menu after the launch callback.
+        DispatchQueue.main.async { self.installFullScreenMenuItem(nil) }
+    }
+
+    @objc private func installFullScreenMenuItem(_ notification: Notification?) {
+        guard let menu = NSApp.mainMenu?.item(withTitle: String(localized: "View"))?.submenu
+        else { return }
+        let action = #selector(NSWindow.toggleFullScreen(_:))
+        guard !menu.items.contains(where: { $0.action == action }) else { return }
+
+        // A nil target lets NSWindow validate the command, including its native
+        // Enter/Exit Full Screen title. Reinstall if SwiftUI rebuilds the menu.
+        let item = NSMenuItem(
+            title: String(localized: "Enter Full Screen"),
+            action: action,
+            keyEquivalent: "f"
+        )
+        item.keyEquivalentModifierMask = [.control, .command]
+        menu.addItem(.separator())
+        menu.addItem(item)
     }
 
     /// Opens every directory Finder placed on the service pasteboard as a
