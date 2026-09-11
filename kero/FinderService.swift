@@ -9,6 +9,7 @@ import AppKit
 /// Info.plist; AppKit forwards matching service requests to this object.
 @MainActor
 final class KeroApplicationDelegate: NSObject, NSApplicationDelegate {
+    private var fullScreenKeyMonitor: Any?
     func applicationWillFinishLaunching(_ notification: Notification) {
         // AppSettings is first initialized from SwiftUI's App.init(), where
         // NSApp may not exist yet. Reapply the saved override once AppKit is
@@ -18,6 +19,25 @@ final class KeroApplicationDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.servicesProvider = self
+        // SwiftUI's menu dispatch ignores key equivalents on AppKit items added
+        // after its command graph is built. Route this shortcut before it reaches
+        // the focused terminal/editor, while preserving NSWindow's validation.
+        fullScreenKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard event.modifierFlags.intersection([.command, .control, .option, .shift]) == [.command, .control],
+                  event.charactersIgnoringModifiers?.lowercased() == "f"
+            else { return event }
+            self?.installFullScreenMenuItem(nil)
+            let action = #selector(NSWindow.toggleFullScreen(_:))
+            guard let menu = NSApp.mainMenu?.item(withTitle: String(localized: "View"))?.submenu,
+                  let item = menu.items.first(where: { $0.action == action }),
+                  let window = NSApp.target(forAction: action) as? NSWindow,
+                  window.validateMenuItem(item)
+            else { return event }
+            if !event.isARepeat {
+                NSApp.sendAction(action, to: window, from: item)
+            }
+            return nil
+        }
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(installFullScreenMenuItem(_:)),
